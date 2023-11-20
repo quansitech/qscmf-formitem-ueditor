@@ -1,0 +1,29 @@
+{
+    "name": "quansitech/qscmf-formitem-ueditor",
+    "description": "qscmf ueditor form",
+    "keywords": ["qscmf", "component", "form", "ueditor"],
+    "type": "library",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "xhiny",
+            "email": "axhiny@163.com"
+        }
+    ],
+    "require": {
+        "php": ">=8.2",
+        "tiderjian/think-core": "*@dev"
+    },
+    "autoload": {
+        "psr-4": {
+            "FormItem\\Ueditor\\": "src/"
+        }
+    },
+    "extra": {
+        "qscmf": {
+            "providers": [
+                "FormItem\\Ueditor\\UeditorProvider"
+            ]
+        }
+    }
+}
