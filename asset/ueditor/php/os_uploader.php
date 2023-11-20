@@ -32,7 +32,7 @@ function combineOsFileUrl($vendor_cls, $objet):string{
     return $host.'/'.$objet;
 }
 
-function getHeaderOptions($vendor_cls):array{
+function getHeaderOptions($vendor_cls):?array{
     return $vendor_cls->getUploadConfig()->getMeta();
 }
 
