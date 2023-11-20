@@ -1,215 +1,80 @@
-# qscmf-buttontype-modal
+# quansitech/qscmf-formitem-ueditor
 
 ```text
-qscmf 按钮类型组件--modal
+qscmf 表单组件--ueditor
 
-可以向列表顶部、列表行、表单页添加此类型按钮
+富文本组件
 ```
 
 #### 安装
 
 ```php
-composer require quansitech/qscmf-buttontype-modal
+composer require quansitech/qscmf-formitem-ueditor
 ```
 
-#### 添加按钮
-
-[ModalButtonBuilder使用说明](https://github.com/quansitech/qscmf-buttontype-modal/blob/master/ModalButtonBuilder.md)
-
-+ 向列表添加一个顶部按钮
-  
+#### 用法
++ 简单用法
   ```php
-  public function add(){
-    if (IS_POST) {
-        // 业务逻辑
-    }
-    else {
-        // 使用FormBuilder快速建立表单页面。
-        $builder = new \Qscmf\Builder\FormBuilder();
-        $builder
-            ->setPostUrl(U('add'))
-            ->addFormItem('nick_name', 'text', '用户名*')
-            ->addFormItem('email', 'text', '电子邮箱*')
-            ->addFormItem('telephone', 'text', '手机')
-            ->addFormItem('pwd', 'password', '密码*')
-            ->addFormItem('pwd1', 'password', '重复密码*')
-            ->setShowBtn(false);
-  
-        return $builder;
-    }
-  }
-  
-  public function buildTopModal(){
-    return (new \Qs\ModalButton\ModalButtonBuilder())
-                ->setTitle("新增")
-                ->bindFormBuilder($this->add());
-  }
-  
-  // 按钮options属性传入ModalButtonBuilder对象 
-   (new \Qscmf\Builder\ListBuilder())->addTopButton('modal', ['title' => '新增'],'','',$this->buildTopModal())
+  ->addFormItem('desc', 'ueditor', '商家简介')
   ```
 
-+ 向列表添加一个行按钮
-  
++ 设置上传文件（或抓取远程图）的url前缀，和url后缀
   ```php
-  public function edit($id){
-    if (IS_POST) {
-        // 业务逻辑
-    }
-    else {
-        $info = D('User')->getOne($id);
-        // 使用FormBuilder快速建立表单页面。
-        $builder = new \Qscmf\Builder\FormBuilder();
-        $builder
-            ->setPostUrl(U('add'))
-            ->addFormItem('nick_name', 'text', '用户名*')
-            ->addFormItem('email', 'text', '电子邮箱*')
-            ->addFormItem('telephone', 'text', '手机')
-            ->addFormItem('pwd', 'password', '密码*')
-            ->addFormItem('pwd1', 'password', '重复密码*')
-            ->setFormData($info)
-            ->setShowBtn(false);
+  //addFormItem第七个参数，传递指定的上传处理地址，加上url_prefix参数和url_suffix
+  //拼接出的url结果： url_prefix . url原来的相对路径. url_suffix
+  ->addFormItem('desc', 'ueditor', '商家简介', '', '', '', 'data-url="/Public/libs/ueditor/php/controller.php?url_prefix=prefix地址&url_suffix=后缀"')
   
-        return $builder;
-    }
-  }
+  //场景举例：
+  //某些管理员在上传富文本图片时，会上传一张非常大的图片，这样会导致用户访问该页面异常缓慢
+  //这时可以利用url_prefix配合imageproxy做到自动降低图片大小，降低图片占用的网络带宽
   
-  public function buildEditFormModal($id ){
-    return (new \Qs\ModalButton\ModalButtonBuilder())
-        ->bindFormBuilder($this->edit($id))
-        ->setKeyboard(false)
-        ->setBackdrop(false)
-        ->setTitle('编辑');
-    }
+  $url_prefix = U('/ip/q90', '', false, true) . '/' . U('/', '', false, true);
+  //url_prefix = http://域名/ip/q90/http://域名/图片地址
+  ->addFormItem('desc', 'ueditor', '商家简介', '', '', '', 'data-url="/Public/libs/ueditor/php/controller.php?url_prefix=' . $url_prefix . '"')
+  ```
   
-  $data_list = D('User')->select();
-  foreach($data_list as &$data){
-    $right_edit_form_modal = $this->buildEditFormModal($data['id']);
-    $data['list_edit_form'] = $right_edit_form_modal;
-  }
-  // 每一行数据需要定义'list_edit_form'的值，且该值为ModalButtonBuilder对象 
-   (new \Qscmf\Builder\ListBuilder())
-  ->addRightButton('modal',['title' => '编辑'], '', '', 'list_edit_form')
-  ->setTableDataList($data_list)
++ insertframe: 默认启用。用于插入```<iframe></iframe>```或```url```，可以编辑宽高，边框，是否允许滚动,对齐方式等属性,其他属性会被删除。
+
++ insert_richtext: 默认启用。通过```微信公众号url```，可以抓取微信公众号的文章内容以及图片
+
++ [自定义上传文件至不同云服务商功能](https://github.com/quansitech/qscmf-formitem-object-storage/blob/main/README.md#%E4%BD%BF%E7%94%A8)
+
++ 通过forcecatchremote属性设置是否强制要求抓取外链图片至本地，该属性默认为true。
+  ```blade
+  复制外链文章时，会抓取外链图片至本地。若该属性为true，则未抓取完会显示loadding图片且不能保存；若该属性为false，如果未等全部抓取完就保存，此时图片还是外链。
+  ```
+  ```php
+  //addFormItem第七个参数，设置data-forcecatchremote="true"
+  ->addFormItem('desc', 'ueditor', '商家简介', '', '', '', 'data-forcecatchremote="true"')
   ```
 
-+ 向表单添加一个按钮
-  
++ 重新指定UE的JS CONFIG文件的路径
   ```php
-    public function edit($id){
-    if (IS_POST) {
-        // 业务逻辑
-    }
-    else {
-        $info = D('User')->getOne($id);
-        // 使用FormBuilder快速建立表单页面。
-        $builder = new \Qscmf\Builder\FormBuilder();
-        $builder
-            ->setPostUrl(U('add'))
-            ->addFormItem('nick_name', 'text', '用户名*')
-            ->addFormItem('email', 'text', '电子邮箱*')
-            ->addFormItem('telephone', 'text', '手机')
-            ->addFormItem('pwd', 'password', '密码*')
-            ->addFormItem('pwd1', 'password', '重复密码*')
-            ->setFormData($info)
-            ->setShowBtn(false);
-  
-        return $builder;
-    }
-  }
-  
-  public function buildEditFormModal($id){
-    return (new \Qs\ModalButton\ModalButtonBuilder())
-        ->bindFormBuilder($this->edit($id))
-        ->setKeyboard(false)
-        ->setBackdrop(false)
-        ->setIsForward(false)
-        ->setTitle('编辑');
-    }
-  
-  $info = D('User')->getOne($id);
-  $info['form_edit_form'] = $this->buildEditFormModal($info['id'])
-   // 表单数据需要定义'form_edit_form'的值，且该值为ModalButtonBuilder对象 
-   (new \Qscmf\Builder\FormBuilder())
-  ->addButton('modal',['title' => '编辑'], '', '', 'form_edit_form')
-  ->setFormData($info)
+  //在Common/Conf/config.php中新增配置值
+  'CUSTOM_UEDITOR_JS_CONFIG' => __ROOT__ . '/Public/static/ueditor.config.js'  //注意必须加上__ROOT__，为了兼容根目录是网站子路径的情况
   ```
 
-+ ajax的方式加载内容 (实验性功能)
-  
-  > 1. 接口说明
-  >    
-  >    > + 需要返回JSON数据格式
-  >    > + 若数据正常则设置status为1，否则为0
-  >    > + 将需要返回的内容赋值给info
-  > 
-  > 2. 用例
-  > 
-  > ```php
-  > // 设置Modal 内容请求API
-  >  protected function buildTopModal(){
-  >      return (new \Qs\ModalButton\ModalButtonBuilder())
-  >            ->setTitle("新增")
-  >            ->setBackdrop(false)
-  >            ->setKeyboard(false)
-  >            ->setBodyApiUrl(U("add"));
-  >  }
-  > 
-  >  // ListBuilder对应列配置
-  >  ->addTopButton('modal', ['title' => '新增'],'','',$this->buildTopModal());
-  > 
-  > public function add(){
-  > 
-  >    $builder = new FormBuilder();
-  >    $builder
-  >        ->addFormItem('title', 'text', '标题')
-  >        ->addFormItem('summary', 'textarea', '简介')
-  >        ->addFormItem('cover', 'picture', '封面', '尺寸为214*250px', ['width' => 214, 'height' => 250])
-  >        ->setFormData($info)
-  >        ->setShowBtn(false)
-  >        ->setReadOnly(true);
-  > 
-  >    $this->ajaxReturn(['status' => 1, 'info' => $builder->build(true)]);
-  > }
-  > ```
++ 设置ue的option参数
+  ```php
+  //如：想通过form.options来配置ue的toolbars参数
+  //组件会自动完成php数组--》js json对象的转换，并传入ue中
+  ->addFormItem('content', 'ueditor', '内容', '', ['toolbars' => [['attachment']]])
+  ```
 
-+ 模态框表单获取ListBuilder选中的checkbox值
-  + 按钮添加样式类 inject_selected
-  + 可使用ModalButtonBuilder对象的setSelectedIdFieldName方法自定义对应的表单字段值，默认为 qslb_selected_ids
-  + 用法
-    ```php
-    $builder = new \Qscmf\Builder\ListBuilder();
-    $builder = $builder->setMetaTitle('可编辑测试列表');
-    $builder
-            ->addTopButton('modal', ['title' => '新增', 'class' => "btn btn-primary inject_selected"],'','',$this->buildAddModal());
-    
-    
-    protected function buildAddModal(){
-        $modal = (new \Qs\ModalButton\ModalButtonBuilder());
-        return
-            $modal
-                ->setTitle('新增可编辑测试')
-                ->setBackdrop(false)
-                ->setKeyboard(false)
-                ->setSelectedIdFieldName("org_id")
-                ->bindFormBuilder($this->add());
-    }
++ 自定义UE色板
+  ```php
+  全局配置
+  1.先COPY ueditor.config.js 文件到项目路径，重新指定JS CONFIG路径
+  2.修改ueditor.config.js 的customColors配置项，第一行10色块为主题色块， 最后一行10色块为标准色块，可按照需要自行增删改里面的色值。
   
-    public function add(){
-        $builder = new FormBuilder();
-        $builder
-                ->addFormItem('title', 'text', '标题')
-                ->addFormItem('summary', 'textarea', '简介')
-                ->addFormItem('cover', 'picture', '封面', '尺寸为214*250px', ['width' => 214, 'height' => 250])
-                ->setFormData($info)
-                ->setShowBtn(false);
-                
-            return $builder;
-        }
-    }
   
-    ```
+  局部配置
+  1. 在Formbuilder设置formItem时，可传递customColors的设置，详细方法查看“设置ue的option参数”
+  ```
 
-#### 升级指南
-
-[升级指南](https://github.com/quansitech/qscmf-buttontype-modal/blob/master/Upgrade.md)
++ 自定义上传config设置
+  
+  ```blade
+  在app/Common/Conf 下新增ueditor_config.json或者ueditor_config.php(返回数组)，该文件将会替换掉默认的config.json。如有客制化config.json的需求，定制该文件即可。
+  ```
+  
