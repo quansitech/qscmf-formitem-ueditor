@@ -81,8 +81,7 @@
         //,theme:'default'
         //,themePath:URL +"themes/"
 
-        
-        //在modal中使用uedior层级需要设置到1500，否则下拉框会被modal层遮挡 2024/4/8
+
         ,zIndex : 9     //编辑器层级的基数,默认是900，避免遮挡其他的控件，如icheckbox为10
 
 
