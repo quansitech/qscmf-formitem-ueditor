@@ -207,6 +207,34 @@
             <define name="UEDITOR" value="1"/>
         </notdefined>
         <script type="text/javascript">
+            function getMaxZIndex(element) {
+                var currentElement = element;
+                var zIndexValues = [];
+
+                while (currentElement.parentNode) {
+                    currentElement = currentElement.parentNode;
+
+                    // 忽略 document 和 documentFragment 元素
+                    if (currentElement.nodeType === Node.DOCUMENT_NODE || currentElement.nodeType === Node.DOCUMENT_FRAGMENT_NODE) {
+                        continue;
+                    }
+
+                    var zIndex = window.getComputedStyle(currentElement).getPropertyValue('z-index');
+
+                    // 忽略非数字的z-index值，如 'auto'
+                    if (!isNaN(zIndex)) {
+                        zIndexValues.push(parseInt(zIndex, 10));
+                    }
+                }
+
+                // 如果 zIndexValues 为空，返回一个默认值，这里假设为 0
+                if (zIndexValues.length === 0) {
+                    return 0;
+                }
+                // 返回最大的z-index值
+                return Math.max(...zIndexValues);
+            }
+
             var url = $('#{$gid}').data('url');
             var forcecatchremote = $('#{$gid}').data('forcecatchremote');
             if (typeof forcecatchremote === 'undefined'){
@@ -226,6 +254,7 @@
                 opt['forcecatchremote'] = forcecatchremote;
             }
             opt['topOffset']=$('.navbar-static-top').height();
+            opt['zIndex'] = getMaxZIndex(document.getElementById('{$gid}')) + 10;
 
             UE.getEditor('{$gid}', opt);
 
