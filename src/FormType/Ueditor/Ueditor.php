@@ -1,11 +1,14 @@
 <?php
 namespace FormItem\Ueditor\FormType\Ueditor;
 
+use AntdAdmin\Component\ColumnType\BaseColumn;
 use Illuminate\Support\Str;
+use Qscmf\Builder\Antd\BuilderAdapter\FormAdapter\IAntdFormItem;
 use Qscmf\Builder\FormType\FormType;
 use Think\View;
 
-class Ueditor implements FormType {
+class Ueditor implements FormType, IAntdFormItem
+{
 
     public function build(array $form_type){
         $view = new View();
@@ -21,5 +24,12 @@ class Ueditor implements FormType {
         $content = $view->fetch(__DIR__ . '/ueditor.html');
         
         return $content;
+    }
+
+    public function antdRender($options): BaseColumn
+    {
+        $column = new \AntdAdmin\Component\Form\ColumnType\Ueditor($options['name'], $options['title']);
+
+        return $column;
     }
 }
