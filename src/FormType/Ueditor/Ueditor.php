@@ -26,7 +26,7 @@ class Ueditor implements FormType, IAntdFormItem
         return $content;
     }
 
-    public function antdRender($options): BaseColumn
+    public function formAntdRender($options): BaseColumn
     {
         $column = new \AntdAdmin\Component\Form\ColumnType\Ueditor($options['name'], $options['title']);
 
