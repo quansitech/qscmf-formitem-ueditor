@@ -12,6 +12,9 @@ qscmf 表单组件--ueditor
 composer require quansitech/qscmf-formitem-ueditor
 ```
 
+#### [升级指南](Upgrade.md)
+
+
 #### 用法
 + 简单用法
   ```php
@@ -22,7 +25,7 @@ composer require quansitech/qscmf-formitem-ueditor
   ```php
   //addFormItem第七个参数，传递指定的上传处理地址，加上url_prefix参数和url_suffix
   //拼接出的url结果： url_prefix . url原来的相对路径. url_suffix
-  ->addFormItem('desc', 'ueditor', '商家简介', '', '', '', 'data-url="/Public/ueditor/php/controller.php?url_prefix=prefix地址&url_suffix=后缀"')
+  ->addFormItem('desc', 'ueditor', '商家简介', '', '', '', 'data-url="/extends/ueditor/index?url_prefix=prefix地址&url_suffix=后缀"')
   
   //场景举例：
   //某些管理员在上传富文本图片时，会上传一张非常大的图片，这样会导致用户访问该页面异常缓慢
@@ -30,13 +33,13 @@ composer require quansitech/qscmf-formitem-ueditor
   
   $url_prefix = U('/ip/q90', '', false, true) . '/' . U('/', '', false, true);
   //url_prefix = http://域名/ip/q90/http://域名/图片地址
-  ->addFormItem('desc', 'ueditor', '商家简介', '', '', '', 'data-url="/Public/ueditor/php/controller.php?url_prefix=' . $url_prefix . '"')
+  ->addFormItem('desc', 'ueditor', '商家简介', '', '', '', 'data-url="/extends/ueditor/index?url_prefix=' . $url_prefix . '"')
   
   // 使用CDN
   $domain = HTTP_PROTOCOL . "://" . SITE_URL;
   $url_prefix = injecCdntUrl();
 
-  ->addFormItem("content", "ueditor", "内容", "", "", "", "data-url=$domain/Public/ueditor/php/controller.php?type=editor&url_prefix=$url_prefix data-forcecatchremote='true'")
+  ->addFormItem("content", "ueditor", "内容", "", "", "", "data-url=$domain/extends/ueditor/index?type=editor&url_prefix=$url_prefix data-forcecatchremote='true'")
   ```
   
 + insertframe: 默认启用。用于插入```<iframe></iframe>```或```url```，可以编辑宽高，边框，是否允许滚动,对齐方式等属性,其他属性会被删除。

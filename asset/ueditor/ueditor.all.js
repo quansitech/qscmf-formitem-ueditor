@@ -8436,15 +8436,24 @@ UE.useOSS = function(){
 
     function genSign(url, file, vendorType){
         let params = {};
+        let newUrl = url;
         const fileName = file.name
-        console.log('v t', vendorType)
+        const {isOss, urlVendorType} = extractVendorType(url, null);
 
-        osHooks.trigger('genOsParam', vendorType, url+'&scence='+'ueditor', fileName, file, '', params, '')
+        if(!urlVendorType){
+            newUrl = newUrl+'&vendor_type='+vendorType;
+        }
+
+        osHooks.trigger('genOsParam', vendorType, injectPolicyUrl(newUrl), fileName, file, '', params, '')
 
         return {
             url:params.osParams.url,
             multipart_params:params.osParams.multipart_params
         };
+    }
+
+    function injectPolicyUrl(url){
+        return url+'&scence='+'ueditor';
     }
 
     function injectFormData(file, formData, params){
@@ -8614,6 +8623,14 @@ UE.useOSS = function(){
         }
     }
 
+    function extractVendorType(action, defVendorType = null){
+        const query = utils.getQueryParams(action);
+        const isOss = query?.os === '1';
+        const vendorType = isOss ? (query?.vendor_type || defVendorType) : null;
+
+        return {isOss: isOss, vendorType: vendorType}
+    }
+
     return {
         genSign: function(url, file, vendorType){
             return genSign(url, file, vendorType)
@@ -8625,11 +8642,7 @@ UE.useOSS = function(){
             uploadByBatchUrl(url, fileUrlArr, vendorType, catcherFieldName, onSuccess, onError)
         },
         extractVendorType: function(action, defVendorType = null){
-            const query = utils.getQueryParams(action);
-            const isOss = query?.os === '1';
-            const vendorType = isOss ? (query?.vendor_type || defVendorType) : null;
-
-            return {isOss: isOss, vendorType: vendorType}
+            return extractVendorType(action, defVendorType)
         },
         useWebUpload:function(url){
             return useWebUpload(url);

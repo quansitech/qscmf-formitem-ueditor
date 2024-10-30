@@ -33,6 +33,9 @@
         // 服务器统一请求接口路径
         , serverUrl: SERVER_URL
 
+        // 云存储供应商
+        , osVendorType: ""
+
         //工具栏上的所有的功能按钮和下拉框，可以在new编辑器的实例时选择自己需要的从新定义
         , toolbars: [[
             'bold', 'italic', 'underline','insertorderedlist', 'insertunorderedlist',

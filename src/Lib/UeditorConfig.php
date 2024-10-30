@@ -29,7 +29,7 @@ class UeditorConfig
             $config_file = APP_DIR . '/Common/Conf/ueditor_config.php';
         }
         else{
-            $config_file =__DIR__."/config.json";
+            $config_file = __DIR__.'/../../asset/ueditor/php/config.json';
         }
 
         $extend = pathinfo($config_file, PATHINFO_EXTENSION);
