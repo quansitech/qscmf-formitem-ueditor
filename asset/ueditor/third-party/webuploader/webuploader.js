@@ -3694,7 +3694,15 @@
                 // 在发送之间可以添加字段什么的。。。
                 // 如果默认的字段不够使用，可以通过监听此事件来扩展
                 owner.trigger( 'uploadBeforeSend', block, data, headers );
-    
+                const action = useOSS.useWebUpload(owner.option('server'));
+                const {isOss, vendorType} = useOSS.extractVendorType(action, editor.getOpt('osVendorType'));
+                if (isOss){
+                    const params = useOSS.genSign(action, file, vendorType)
+                    data = {name:data.name,...params.multipart_params}
+
+                    tr.options.server = params.url
+                    opts.fileVal = 'file';
+                }
                 // 开始发送。
                 tr.appendBlob( opts.fileVal, block.blob, file.name );
                 tr.append( data );

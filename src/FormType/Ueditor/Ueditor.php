@@ -18,6 +18,7 @@ class Ueditor implements FormType {
         else{
             $view->assign('configJs', __ROOT__ . '/Public/ueditor/ueditor.config.js');
         }
+        $view->assign('server_url', __ROOT__ . '/extends/ueditor/index');
         $content = $view->fetch(__DIR__ . '/ueditor.html');
         
         return $content;

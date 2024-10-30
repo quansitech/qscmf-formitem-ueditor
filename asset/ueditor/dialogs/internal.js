@@ -7,9 +7,13 @@
 
     UE = parent.UE;
 
+    osHooks = parent.osHooks;
+
     domUtils = UE.dom.domUtils;
 
     utils = UE.utils;
+
+    useOSS = UE.useOSS;
 
     browser = UE.browser;
 
