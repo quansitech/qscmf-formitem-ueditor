@@ -305,6 +305,22 @@ var ie = browser.ie,
  */
 
 var utils = UE.utils = {
+    getQueryParams: function getQueryParams(url) {
+        const queryString = url.split('?')[1];
+
+        if (!queryString) {
+            return {};
+        }
+
+        const params = new URLSearchParams(queryString);
+        const result = {};
+
+        for (const [key, value] of params.entries()) {
+            result[key] = value;
+        }
+
+        return result;
+    },
 
     /**
      * 用给定的迭代器遍历对象
@@ -8402,10 +8418,236 @@ UE.ajax = function() {
                 'oncomplete': fn
             };
             doJsonp(url, opts);
-		}
+		},
+        creatAjaxRequest:function(){
+            return creatAjaxRequest()
+        }
 	};
+}();
 
+/**
+ *
+ * 上传资源到云存储
+ * @module UE.useOSS
+ *
+ */
 
+UE.useOSS = function(){
+
+    function genSign(url, file, vendorType){
+        let params = {};
+        let newUrl = url;
+        const fileName = file.name
+        const {isOss, urlVendorType} = extractVendorType(url, null);
+
+        if(!urlVendorType){
+            newUrl = newUrl+'&vendor_type='+vendorType;
+        }
+
+        osHooks.trigger('genOsParam', vendorType, injectPolicyUrl(newUrl), fileName, file, '', params, '')
+
+        return {
+            url:params.osParams.url,
+            multipart_params:params.osParams.multipart_params
+        };
+    }
+
+    function injectPolicyUrl(url){
+        return url+'&scence='+'ueditor';
+    }
+
+    function injectFormData(file, formData, params){
+        const extraFields = {name:file.name, ...params.multipart_params}
+
+        for (const name in extraFields) {
+            formData.append(name, extraFields[name])
+        }
+
+        formData.append('file', file, file.name )
+    }
+
+    function doUpload(url, file, vendorType, formData, onSuccess, onError){
+        let innerFormData = formData || new FormData();
+        const params = genSign(useWebUpload(url), file, vendorType)
+        injectFormData(file, innerFormData, params);
+
+        const ajaxOpts = {
+            method: 'POST',
+            timeout:3600000,
+            onSuccess:function(res){
+                const json = JSON.parse(res.responseText);
+                if (handleError.hasError(json) && onError){
+                    onError && onError(handleError.extractError(json));
+                }else{
+                    onSuccess && onSuccess(json);
+                }
+            },
+            onError:function(err){
+                onError && onError(err);
+            }
+        };
+
+        const xhr = UE.ajax.creatAjaxRequest();
+
+        let timeIsOut = false
+        const timerID = setTimeout(function () {
+            if (xhr.readyState !== 4) {
+                timeIsOut = true;
+                xhr.abort();
+                clearTimeout(timerID);
+            }
+        }, ajaxOpts.timeout);
+
+        xhr.open('POST', params.url, true);
+        xhr.setRequestHeader("X-Requested-With", "XMLHttpRequest");
+
+        xhr.onreadystatechange = function() {
+            if (xhr.readyState === 4) {
+                if (!timeIsOut && xhr.status === 200) {
+                    ajaxOpts.onSuccess(xhr);
+                } else {
+                    ajaxOpts.onError(xhr);
+                }
+            }
+        };
+
+        xhr.send(innerFormData);
+    }
+
+    function useWebUpload(url){
+        return url+'&web_upload=1';
+    }
+
+    function urlToFile(url, callback) {
+        const xhr = new XMLHttpRequest();
+        xhr.open('GET', url, true);
+        xhr.responseType = 'blob';
+
+        xhr.onload = function() {
+            if (xhr.status === 200) {
+                const blob = xhr.response;
+                const fileName = getFileNameFromUrl(url);
+                const file = new File([blob], fileName, {type:blob.type});
+                callback(file);
+            }
+        };
+
+        xhr.send();
+    }
+
+    function getFileNameFromUrl(url) {
+        const index = url.lastIndexOf('/');
+        return url.substring(index + 1);
+    }
+
+    function uploadByUrl(url, fileUrl, vendorType, formData, onSuccess, onError){
+        urlToFile(fileUrl, function(file){
+            doUpload(url, file, vendorType, formData, onSuccess, onError)
+        })
+    }
+
+    function uploadByBatchUrl(url, fileUrlArr, vendorType, catcherFieldName, onSuccess, onError){
+        let successCount = {current:0};
+        let errCount = {current:0};
+        let errRes=[];
+        const total = fileUrlArr.length
+
+        let res=[];
+        const handleSuccess = function(i){
+            return function(json){
+                res[i] = {...json, state:'SUCCESS'};
+                res[i][catcherFieldName] = fileUrlArr[i];
+                successCount.current++;
+
+                if (successCount.current === total){
+                    allSuccess()
+                }
+            }
+        }
+
+        const handleError = function(i){
+            return function(err){
+                errRes[i] = err;
+                errCount.current++;
+
+                if (errCount.current === total){
+                    onError()
+                }
+            }
+        }
+
+        const allSuccess = function(){
+            onSuccess({
+                state:'SUCCESS',
+                list: res
+            })
+        }
+
+        for(let i = 0; i < fileUrlArr.length; i++){
+            const newUrl = url +'&'+catcherFieldName+'='+fileUrlArr[i];
+            uploadByUrl(newUrl, fileUrlArr[i], vendorType, null, handleSuccess(i), handleError(i))
+        }
+
+    }
+
+    const handleError = {
+        hasErrMsg: function (res) {
+            return res.hasOwnProperty('err_msg')
+        },
+        hasErrInfo: function (res){
+            return res.hasOwnProperty('status') && parseInt(res.status) === 0 && res.hasOwnProperty('info')
+        },
+        hasError: function (res){
+            const thisObj = this;
+
+            if (thisObj.hasErrMsg(res)){
+                return res;
+            }
+            if (thisObj.hasErrInfo(res)){
+                return res;
+            }
+
+            return false;
+        },
+        extractError: function (res){
+            const thisObj = this;
+
+            if (thisObj.hasErrMsg(res)){
+                return res.err_msg;
+            }
+            if (thisObj.hasErrInfo(res)){
+                return res.info;
+            }
+
+            return ;
+        }
+    }
+
+    function extractVendorType(action, defVendorType = null){
+        const query = utils.getQueryParams(action);
+        const isOss = query?.os === '1';
+        const vendorType = isOss ? (query?.vendor_type || defVendorType) : null;
+
+        return {isOss: isOss, vendorType: vendorType}
+    }
+
+    return {
+        genSign: function(url, file, vendorType){
+            return genSign(url, file, vendorType)
+        },
+        upload: function(url, file, vendorType, formData, onSuccess, onError){
+            doUpload(url, file, vendorType, formData, onSuccess, onError)
+        },
+        uploadByBatchUrl: function(url, fileUrlArr, vendorType, catcherFieldName, onSuccess, onError){
+            uploadByBatchUrl(url, fileUrlArr, vendorType, catcherFieldName, onSuccess, onError)
+        },
+        extractVendorType: function(action, defVendorType = null){
+            return extractVendorType(action, defVendorType)
+        },
+        useWebUpload:function(url){
+            return useWebUpload(url);
+        }
+    }
 }();
 
 
@@ -24142,23 +24384,28 @@ UE.plugin.register('autoupload', function (){
             params = utils.serializeParam(me.queryCommandValue('serverparam')) || '',
             url = utils.formatUrl(actionUrl + (actionUrl.indexOf('?') == -1 ? '?':'&') + params);
 
-        fd.append(fieldName, file, file.name || ('blob.' + file.type.substr('image/'.length)));
-        fd.append('type', 'ajax');
-        xhr.open("post", url, true);
-        xhr.setRequestHeader("X-Requested-With", "XMLHttpRequest");
-        xhr.addEventListener('load', function (e) {
-            try{
-                var json = (new Function("return " + utils.trim(e.target.response)))();
-                if (json.state == 'SUCCESS' && json.url) {
-                    successHandler(json);
-                } else {
-                    errorHandler(json.state);
+        const {isOss, vendorType} = UE.useOSS.extractVendorType(url, me.getOpt('osVendorType'));
+        if (isOss){
+            UE.useOSS.upload(url, file, vendorType, fd, successHandler, errorHandler)
+        }else{
+            fd.append(fieldName, file, file.name || ('blob.' + file.type.substr('image/'.length)));
+            fd.append('type', 'ajax');
+            xhr.open("post", url, true);
+            xhr.setRequestHeader("X-Requested-With", "XMLHttpRequest");
+            xhr.addEventListener('load', function (e) {
+                try{
+                    var json = (new Function("return " + utils.trim(e.target.response)))();
+                    if (json.state == 'SUCCESS' && json.url) {
+                        successHandler(json);
+                    } else {
+                        errorHandler(json.state);
+                    }
+                }catch(er){
+                    errorHandler(me.getLang('autoupload.loadError'));
                 }
-            }catch(er){
-                errorHandler(me.getLang('autoupload.loadError'));
-            }
-        });
-        xhr.send(fd);
+            });
+            xhr.send(fd);
+        }
     }
 
     function getPasteImage(e){
@@ -24840,22 +25087,11 @@ UE.plugin.register('simpleupload', function (){
 
                 function callback(){
                     try{
-                        var link, json, loader,
+                        var json,
                             body = (iframe.contentDocument || iframe.contentWindow.document).body,
                             result = body.innerText || body.textContent || '';
                         json = (new Function("return " + result))();
-                        link = me.options.imageUrlPrefix + json.url;
-                        if(json.state == 'SUCCESS' && json.url) {
-                            loader = me.document.getElementById(loadingId);
-                            loader.setAttribute('src', link);
-                            loader.setAttribute('_src', link);
-                            loader.setAttribute('title', json.title || '');
-                            loader.setAttribute('alt', json.original || '');
-                            loader.removeAttribute('id');
-                            domUtils.removeClasses(loader, 'loadingclass');
-                        } else {
-                            showErrorLoader && showErrorLoader(json.state);
-                        }
+                        onSuccess(json)
                     }catch(er){
                         showErrorLoader && showErrorLoader(me.getLang('simpleupload.loadError'));
                     }
@@ -24875,6 +25111,25 @@ UE.plugin.register('simpleupload', function (){
                     }
                 }
 
+                function onSuccess(res){
+                    const link = me.options.imageUrlPrefix + res.url;
+                    if(res.state === 'SUCCESS' && res.url) {
+                        let loader = me.document.getElementById(loadingId);
+                        loader.setAttribute('src', link);
+                        loader.setAttribute('_src', link);
+                        loader.setAttribute('title', res.title || '');
+                        loader.setAttribute('alt', res.original || '');
+                        loader.removeAttribute('id');
+                        domUtils.removeClasses(loader, 'loadingclass');
+                    } else {
+                        showErrorLoader && showErrorLoader(res.state);
+                    }
+                }
+
+                function onError(error){
+                    showErrorLoader && showErrorLoader(me.getLang('simpleupload.loadError'));
+                }
+
                 /* 判断后端配置是否没有加载成功 */
                 if (!me.getOpt('imageActionName')) {
                     errorHandler(me.getLang('autoupload.errorLoadConfig'));
@@ -24888,9 +25143,16 @@ UE.plugin.register('simpleupload', function (){
                     return;
                 }
 
-                domUtils.on(iframe, 'load', callback);
-                form.action = utils.formatUrl(imageActionUrl + (imageActionUrl.indexOf('?') == -1 ? '?':'&') + params);
-                form.submit();
+                let action = utils.formatUrl(imageActionUrl + (imageActionUrl.indexOf('?') == -1 ? '?':'&') + params)
+                form.action = action;
+                const {isOss, vendorType} = UE.useOSS.extractVendorType(action, me.getOpt('osVendorType'));
+                if (isOss){
+                    UE.useOSS.upload(action, input['files'][0], vendorType, null, onSuccess, onError)
+                }
+                else{
+                    domUtils.on(iframe, 'load', callback);
+                    form.submit();
+                }
             });
 
             var stateTimer;

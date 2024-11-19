@@ -1,20 +1,45 @@
 <?php
-/**
- * 根据微信url获取富文本
- * User: viki
- * Date: 21-07-22
- * Time: 下午14:33
- */
 
-$text = '';
-$url = $_GET['url'];
-$url = urldecode($url);
-$text = file_get_contents($url);
+namespace FormItem\Ueditor\Lib\Action;
 
-$cssToInlineStyles = new \TijsVerkoyen\CssToInlineStyles\CssToInlineStyles();
-$text=$cssToInlineStyles->convert($text);
-$text .= <<<EOF
-    <script type="text/javascript" src="../third-party/jquery-1.10.2.min.js"></script>
+class WxCrawlerAction extends AAction
+{
+
+    protected function fetchWxContent($url): bool|string
+    {
+        $opts = array(
+            CURLOPT_TIMEOUT        => 30,
+            CURLOPT_RETURNTRANSFER => 1,
+            CURLOPT_SSL_VERIFYPEER => false,
+            CURLOPT_SSL_VERIFYHOST => false,
+            CURLOPT_HTTPHEADER     => []
+        );
+
+        $opts[CURLOPT_URL] = $url ;
+
+        /* 初始化并执行curl请求 */
+        $ch = curl_init();
+        curl_setopt_array($ch, $opts);
+        $data  = curl_exec($ch);
+        $error = curl_error($ch);
+        curl_close($ch);
+        if($error) {
+            E('请求发生错误：' . $error);
+        }
+        return  $data;
+    }
+
+    public function run():string
+    {
+        $js_url = asset('ueditor/third-party/jquery-1.10.2.min.js');
+        $url = $this->get_data['url'];
+        $url = urldecode($url);
+        $text = $this->fetchWxContent($url);
+
+        $cssToInlineStyles = new \TijsVerkoyen\CssToInlineStyles\CssToInlineStyles();
+        $text=$cssToInlineStyles->convert($text);
+        $text .= <<<EOF
+    <script type="text/javascript" src="$js_url"></script>
     <script>
             function handleImgSrc(){
                 //因微信公众号文章采用懒加载 这里要取消懒加载
@@ -53,4 +78,7 @@ $text .= <<<EOF
     </script>
 EOF;
 
-return $text;
+        return $text;
+    }
+
+}

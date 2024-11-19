@@ -1,5 +1,6 @@
 <?php
 
+namespace FormItem\Ueditor\Lib;
 /**
  * Created by JetBrains PhpStorm.
  * User: taoqili
@@ -55,7 +56,7 @@ class Uploader
         $this->type = $type;
         if ($type == "remote") {
             $this->saveRemote();
-        } else if($type == "base64") {
+        } else if ($type == "base64") {
             $this->upBase64();
         } else {
             $this->upFile();
@@ -107,7 +108,7 @@ class Uploader
         }
 
         //创建目录失败
-        if (!file_exists($dirname) && !mkdir($dirname, 0777, true)) {
+        if (!file_exists($dirname) && !mkdir($dirname, 0777, true) && !is_dir($dirname)) {
             $this->stateInfo = $this->getStateInfo("ERROR_CREATE_DIR");
             return;
         } else if (!is_writeable($dirname)) {
@@ -147,7 +148,7 @@ class Uploader
         }
 
         //创建目录失败
-        if (!file_exists($dirname) && !mkdir($dirname, 0777, true)) {
+        if (!file_exists($dirname) && !mkdir($dirname, 0777, true) && !is_dir($dirname)) {
             $this->stateInfo = $this->getStateInfo("ERROR_CREATE_DIR");
             return;
         } else if (!is_writeable($dirname)) {
@@ -189,10 +190,9 @@ class Uploader
             ]
         ]);
 
-        try{
+        try {
             $response = $client->request("GET", $imgUrl);
-        }
-        catch(\Exception $e){
+        } catch (\Exception $e) {
             $this->stateInfo = $e->getMessage();
             return;
         }
@@ -203,19 +203,19 @@ class Uploader
         $body = $response->getBody();
         $img = (string)$body;
 
-        if($code != 200){
+        if ($code != 200) {
             $this->stateInfo = $this->getStateInfo("ERROR_HTTP_LINK");
             return;
         }
 
-        if(!stristr($headers['Content-Type'][0], "image") && !stristr($headers['Content-Type'][0], "jpg")){
+        if (!stristr($headers['Content-Type'][0], "image") && !stristr($headers['Content-Type'][0], "jpg")) {
             $this->stateInfo = $this->getStateInfo("ERROR_HTTP_CONTENTTYPE");
             return;
         }
 
         preg_match("/[\/]([^\/]*)[\.]?[^\.\/]*$/", $http_arr['path'], $m);
 
-        $this->oriName = $m ? $m[1]:"";
+        $this->oriName = $m ? $m[1] : "";
         $this->fileSize = strlen($img);
         $this->fileType = $this->getFileExt($headers['Content-Type'][0]);
         $this->fullName = $this->getFullName($headers['Content-Type'][0]);
@@ -230,10 +230,10 @@ class Uploader
         }
 
         //创建目录失败
-        if (!file_exists($dirname) && !mkdir($dirname, 0777, true)) {
+        if (!file_exists($dirname) && !mkdir($dirname, 0777, true) && !is_dir($dirname)) {
             $this->stateInfo = $this->getStateInfo("ERROR_CREATE_DIR");
             return;
-        } else if (!is_writeable($dirname)) {
+        } else if (!is_writable($dirname)) {
             $this->stateInfo = $this->getStateInfo("ERROR_DIR_NOT_WRITEABLE");
             return;
         }
@@ -252,10 +252,11 @@ class Uploader
      * @param $header
      * @return int
      */
-    private function _getFinalHeaderIndex($header){
+    private function _getFinalHeaderIndex($header): int
+    {
         $max_status_index = 0;
-        collect($header)->each(function ($value, $key) use(&$max_status_index){
-            if (is_int($key) && $max_status_index < $key){
+        collect($header)->each(function ($value, $key) use (&$max_status_index) {
+            if (is_int($key) && $max_status_index < $key) {
                 $max_status_index = $key;
             }
         });
@@ -268,7 +269,7 @@ class Uploader
      * @param $errCode
      * @return string
      */
-    private function getStateInfo($errCode)
+    private function getStateInfo($errCode): string
     {
         return !$this->stateMap[$errCode] ? $this->stateMap["ERROR_UNKNOWN"] : $this->stateMap[$errCode];
     }
@@ -277,7 +278,7 @@ class Uploader
      * 获取文件扩展名
      * @return string
      */
-    private function getFileExt($mimeType = '')
+    private function getFileExt($mimeType = ''): string
     {
         return strtolower(strrchr($this->oriName, '.')) ?: '.' . \Symfony\Component\Mime\MimeTypes::getDefault()->getExtensions($mimeType)[0];
     }
@@ -286,7 +287,7 @@ class Uploader
      * 重命名文件
      * @return string
      */
-    private function getFullName($mimeType = '')
+    private function getFullName($mimeType = ''): string
     {
         //替换日期事件
         $t = time();
@@ -320,7 +321,8 @@ class Uploader
      * 获取文件名
      * @return string
      */
-    private function getFileName () {
+    private function getFileName(): string
+    {
         return substr($this->filePath, strrpos($this->filePath, '/') + 1);
     }
 
@@ -328,12 +330,12 @@ class Uploader
      * 获取文件完整路径
      * @return string
      */
-    private function getFilePath()
+    private function getFilePath(): string
     {
         $fullname = $this->fullName;
         $rootPath = $_SERVER['DOCUMENT_ROOT'];
 
-        if (substr($fullname, 0, 1) != '/') {
+        if (!str_starts_with($fullname, '/')) {
             $fullname = '/' . $fullname;
         }
 
@@ -344,16 +346,16 @@ class Uploader
      * 文件类型检测
      * @return bool
      */
-    private function checkType()
+    private function checkType(): bool
     {
-        return in_array($this->getFileExt(), $this->config["allowFiles"]);
+        return in_array($this->getFileExt(), $this->config["allowFiles"], true);
     }
 
     /**
      * 文件大小检测
      * @return bool
      */
-    private function  checkSize()
+    private function checkSize(): bool
     {
         return $this->fileSize <= ($this->config["maxSize"]);
     }
@@ -362,7 +364,7 @@ class Uploader
      * 获取当前上传成功文件的各项信息
      * @return array
      */
-    public function getFileInfo()
+    public function getFileInfo(): array
     {
         return array(
             "state" => $this->stateInfo,
