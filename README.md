@@ -22,6 +22,7 @@ composer require quansitech/qscmf-formitem-ueditor
   ```php
   //addFormItem第七个参数，传递指定的上传处理地址，加上url_prefix参数和url_suffix
   //拼接出的url结果： url_prefix . url原来的相对路径. url_suffix
+  // 后缀参数 url_suffix 仅对上传图片场景有效
   ->addFormItem('desc', 'ueditor', '商家简介', '', '', '', 'data-url="/Public/ueditor/php/controller.php?url_prefix=prefix地址&url_suffix=后缀"')
   
   //场景举例：

@@ -37,6 +37,21 @@ define('SITE_URL', env('DOMAIN', $_SERVER['HTTP_HOST']). env('ROOT'));
 
 define('HTTP_PROTOCOL', $_SERVER[$common_config['HTTP_PROTOCOL_KEY']]);
 
+function isImageFile($file_path): bool
+{
+    $image_extensions = ['jpg', 'jpeg', 'png', 'gif', 'bmp', 'webp', 'svg', 'tiff', 'tif', 'heic', 'cr2', 'nef', 'arw'];
+
+    $extension = strtolower(pathinfo($file_path, PATHINFO_EXTENSION));
+
+    return in_array($extension, $image_extensions, true);
+}
+function isUploadImage($action): bool
+{
+    $action_list = ['uploadimage', 'uploadscrawl', 'get_wx_rich_text', 'catchimage'];
+
+    return in_array($action, $action_list, true);
+}
+
 function parseUrl($url, $domain = 0, $url_prefix = '', $url_suffix = ''){
     $parsed_url = $url;
 
@@ -44,7 +59,7 @@ function parseUrl($url, $domain = 0, $url_prefix = '', $url_suffix = ''){
         $parsed_url = rtrim($url_prefix, '/') . $parsed_url;
     }
 
-    if($_GET['url_suffix']){
+    if(isUploadImage($_GET['action']) && isImageFile($url) && $_GET['url_suffix']){
         $parsed_url = $parsed_url . $url_suffix;
     }
 
