@@ -12886,7 +12886,7 @@ UE.plugins['paragraph'] = function() {
                         } );
                     }
                     tmpRange.setEndAfter( tmpNode );
-                    
+
                     para = range.document.createElement( style );
                     if(attrs){
                         domUtils.setAttributes(para,attrs);
@@ -12898,7 +12898,7 @@ UE.plugins['paragraph'] = function() {
                     //需要内容占位
                     if(domUtils.isEmptyNode(para)){
                         domUtils.fillChar(range.document,para);
-                        
+
                     }
 
                     tmpRange.insertNode( para );
@@ -13022,7 +13022,7 @@ UE.plugins['paragraph'] = function() {
 
         },
         doDirectionality = function(range,editor,forward){
-            
+
             var bookmark,
                 filterFn = function( node ) {
                     return   node.nodeType == 1 ? !domUtils.isBookmarkNode(node) : !domUtils.isWhitespace(node);
@@ -17695,7 +17695,7 @@ UE.plugins['autoheight'] = function () {
         });
         //修复内容过多时，回到顶部，顶部内容被工具栏遮挡问题
         var lastScrollY;
-        var listener = function () {
+        window.onscroll = function () {
             if(lastScrollY === null){
                 lastScrollY = this.scrollY
             }else if(this.scrollY == 0 && lastScrollY != 0){
@@ -17703,11 +17703,6 @@ UE.plugins['autoheight'] = function () {
                 lastScrollY = null;
             }
         }
-        window.addEventListener('scroll', listener);
-
-        me.addListener('destroy', function () {
-            window.removeEventListener('scroll', listener);
-        });
     });
 
 
@@ -23009,7 +23004,7 @@ UE.plugins['formatmatch'] = function(){
      });
 
     function addList(type,evt){
-        
+
         if(browser.webkit){
             var target = evt.target.tagName == 'IMG' ? evt.target : null;
         }
@@ -23075,7 +23070,7 @@ UE.plugins['formatmatch'] = function(){
 
     me.commands['formatmatch'] = {
         execCommand : function( cmdName ) {
-          
+
             if(flag){
                 flag = 0;
                 list = [];
@@ -23084,7 +23079,6 @@ UE.plugins['formatmatch'] = function(){
             }
 
 
-            
             var range = me.selection.getRange();
             img = range.getClosedNode();
             if(!img || img.tagName != 'IMG'){
