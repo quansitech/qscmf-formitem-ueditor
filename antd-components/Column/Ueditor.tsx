@@ -1,8 +1,8 @@
-import {ColumnProps} from "../../../../antd-admin-front/src/components/Column/types";
+import {ColumnProps} from "@quansitech/antd-admin/dist/components/Column/types";
 import React, {Component} from "react";
-import {createScript} from "../../../../antd-admin-front/src/lib/helpers";
+import {createScript} from "@quansitech/antd-admin/dist/lib/helpers";
 import {Spin} from "antd";
-import {ModalContext, ModalContextProps} from "../../../../antd-admin-front/src/components/ModalContext";
+import {ModalContext, ModalContextProps} from "@quansitech/antd-admin/dist/components/ModalContext";
 import {uniqueId} from "es-toolkit/compat";
 
 declare global {
