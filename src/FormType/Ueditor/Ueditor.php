@@ -5,7 +5,8 @@ use Illuminate\Support\Str;
 use Qscmf\Builder\FormType\FormType;
 use Think\View;
 
-class Ueditor implements FormType {
+class Ueditor implements FormType
+{
 
     public function build(array $form_type){
         $view = new View();
@@ -20,7 +21,7 @@ class Ueditor implements FormType {
         }
         $view->assign('server_url', __ROOT__ . '/extends/ueditor/index');
         $content = $view->fetch(__DIR__ . '/ueditor.html');
-        
+
         return $content;
     }
 }
