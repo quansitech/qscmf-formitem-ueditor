@@ -265,12 +265,12 @@ export default class Ueditor extends Component<ColumnProps & {
 
 
             const config = {
+                forcecatchremote: true,
                 ...this.props.fieldProps?.config,
-                forcecatchremote: typeof this.props.fieldProps?.config?.forcecatchremote === 'undefined' ? true : this.props.fieldProps.config.forcecatchremote,
             }
             if (this.modalContext?.inModal) {
                 config.zIndex = 2000
-                config.topOffset = 0
+                config.autoFloatEnabled = false
             }
 
             this.editor = window.UE.getEditor(this.state.containerId, config)
