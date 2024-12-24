@@ -4,6 +4,7 @@ import {createScript} from "@quansitech/antd-admin/dist/lib/helpers";
 import {Spin} from "antd";
 import {ModalContext, ModalContextProps} from "@quansitech/antd-admin/dist/components/ModalContext";
 import {uniqueId} from "es-toolkit/compat";
+import * as he from 'html-entities'
 
 declare global {
     interface Window {
@@ -265,21 +266,20 @@ export default class Ueditor extends Component<ColumnProps & {
 
 
             const config = {
+                forcecatchremote: true,
                 ...this.props.fieldProps?.config,
-                forcecatchremote: typeof this.props.fieldProps?.config?.forcecatchremote === 'undefined' ? true : this.props.fieldProps.config.forcecatchremote,
             }
             if (this.modalContext?.inModal) {
                 config.zIndex = 2000
-                config.topOffset = 0
+                config.autoFloatEnabled = false
             }
 
             this.editor = window.UE.getEditor(this.state.containerId, config)
             this.editor?.ready(() => {
                 const value = this.props.fieldProps.value
                 if (value) {
-                    const div = document.createElement('div')
-                    div.innerHTML = value
-                    this.editor?.setContent(div.innerText || '')
+                    const content = he.decode(value || '')
+                    this.editor?.setContent(content)
                     this.props.fieldProps.onChange(this.editor?.getContent())
                 }
 
