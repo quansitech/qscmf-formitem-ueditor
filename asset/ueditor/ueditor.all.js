@@ -25115,6 +25115,7 @@ UE.plugin.register('simpleupload', function (){
                         loader.setAttribute('alt', res.original || '');
                         loader.removeAttribute('id');
                         domUtils.removeClasses(loader, 'loadingclass');
+                        me.fireEvent('contentChange');
                     } else {
                         showErrorLoader && showErrorLoader(res.state);
                     }
