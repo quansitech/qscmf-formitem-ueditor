@@ -255,6 +255,10 @@
                 opt['serverUrl'] = url;
             }
 
+            if ($('#{$gid}').parents('.modal-dialog .panel-body').length) {
+                opt['autoFloatEnabled'] = false;
+            }
+
             if (forcecatchremote) {
                 opt['forcecatchremote'] = forcecatchremote;
             }
