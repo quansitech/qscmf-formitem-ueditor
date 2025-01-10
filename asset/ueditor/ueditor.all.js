@@ -25122,6 +25122,8 @@ UE.plugin.register('simpleupload', function (){
                         loader.removeAttribute('id');
                         domUtils.removeClasses(loader, 'loadingclass');
                         me.fireEvent('contentChange');
+                        // 成功后清空input.value
+                        input.value = null;
                     } else {
                         showErrorLoader && showErrorLoader(res.state);
                     }
