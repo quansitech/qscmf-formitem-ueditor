@@ -38,29 +38,35 @@ export default class Ueditor extends Component<ColumnProps & {
             window.UE_LOADING_PROMISE =
                 createScript(this.props.fieldProps.configJsPath || this.props.fieldProps.ueditorPath + '/ueditor.config.js')
                     .then(() => {
-                        return createScript(this.props.fieldProps.ueditorPath + '/ueditor.all.js')
+                        return createScript(this.props.fieldProps.ueditorPath + '/ueditor.all.js?v=250110')
                     })
                     .then(() => {
                         return createScript(this.props.fieldProps.ueditorPath + '/lang/zh-cn/zh-cn.js')
                     })
-                    .then(() => {
-                        // 加加额外脚本
-                        const promises = this.props.fieldProps.extraScripts?.map(s => {
-                            return () => createScript(s)
-                        }) || []
-
-                        async function seqExec(promises: (() => Promise<any>)[]) {
-                            if (promises.length === 0) return;
-
-                            await promises[0]();
-                            await seqExec(promises.slice(1));
-                        }
-
-                        return seqExec(promises)
-                    })
         }
 
-        window.UE_LOADING_PROMISE.then(() => {
+        const extraPromise = () => {
+            // 加加额外脚本
+            const promises = this.props.fieldProps.extraScripts?.map(s => {
+                if (document.querySelector(`script[src="${s}"]`)) {
+                    return () => Promise.resolve()
+                }
+
+                return () => createScript(s)
+            }) || []
+
+            async function seqExec(promises: (() => Promise<any>)[]) {
+                if (promises.length === 0) return;
+
+                await promises[0]();
+                await seqExec(promises.slice(1));
+            }
+
+            return seqExec(promises)
+        }
+
+        window.UE_LOADING_PROMISE.then(async () => {
+            await extraPromise()
             let that = this
             window.UE.plugins['forceCatchRemoteImg'] = function () {
                 if (this.options.forcecatchremote) {
