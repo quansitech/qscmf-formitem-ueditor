@@ -3,8 +3,8 @@ namespace FormItem\Ueditor\FormType\Ueditor;
 
 use AntdAdmin\Component\ColumnType\BaseColumn;
 use Illuminate\Support\Str;
-use Qscmf\Builder\Antd\BuilderAdapter\FormAdapter\IAntdFormColumn;
 use Qscmf\Builder\FormType\FormType;
+use Quansitech\BuilderAdapterForAntdAdmin\BuilderAdapter\FormAdapter\IAntdFormColumn;
 use Think\View;
 
 class Ueditor implements FormType, IAntdFormColumn
