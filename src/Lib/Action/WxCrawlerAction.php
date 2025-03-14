@@ -12,7 +12,8 @@ class WxCrawlerAction extends AAction
             CURLOPT_RETURNTRANSFER => 1,
             CURLOPT_SSL_VERIFYPEER => false,
             CURLOPT_SSL_VERIFYHOST => false,
-            CURLOPT_HTTPHEADER     => []
+            CURLOPT_HTTPHEADER => [],
+            CURLOPT_USERAGENT => "Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/39.0.2171.71 Safari/537.36",
         );
 
         $opts[CURLOPT_URL] = $url ;

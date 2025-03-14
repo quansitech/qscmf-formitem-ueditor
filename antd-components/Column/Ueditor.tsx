@@ -12,6 +12,24 @@ declare global {
     }
 }
 
+function findParentElement(element: HTMLElement, selector: string) {
+    // 检查当前元素是否匹配选择器
+    if (element.matches(selector)) {
+        return element;
+    }
+
+    // 获取父元素
+    const parent = element.parentElement;
+
+    // 如果没有父元素，返回null
+    if (!parent) {
+        return null;
+    }
+
+    // 递归调用函数
+    return findParentElement(parent, selector);
+}
+
 export default class Ueditor extends Component<ColumnProps & {
     fieldProps: {
         ueditorPath: string,
@@ -276,10 +294,14 @@ export default class Ueditor extends Component<ColumnProps & {
             }
             if (this.modalContext?.inModal) {
                 config.zIndex = 2000
-                config.autoFloatEnabled = false
+                config.topOffset = 0
             }
 
             this.editor = window.UE.getEditor(this.state.containerId, config)
+            if (this.modalContext?.inModal) {
+                this.editor.scrollContainer = findParentElement(this.containerRef, '.ant-modal-wrap')
+            }
+
             this.editor?.ready(() => {
                 const value = this.props.fieldProps.value
                 if (value) {
