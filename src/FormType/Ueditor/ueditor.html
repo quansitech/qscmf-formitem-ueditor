@@ -258,10 +258,15 @@
             if (forcecatchremote) {
                 opt['forcecatchremote'] = forcecatchremote;
             }
-            opt['topOffset']=$('.navbar-static-top').height();
+            if (!$('#{$gid}').parents('.modal-body').length) {
+                opt['topOffset'] = $('.navbar-static-top').height();
+            }
             opt['zIndex'] = getMaxZIndex(document.getElementById('{$gid}')) + 10;
 
-            UE.getEditor('{$gid}', opt);
+            var editor = UE.getEditor('{$gid}', opt);
+            if ($('#{$gid}').parents('.modal-dialog .panel-body').length) {
+                editor.scrollContainer = $('#{$gid}').parents('.modal-body .button-modal-body-info').get(0);
+            }
 
         </script>
     </div>
