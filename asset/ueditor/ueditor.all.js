@@ -17737,6 +17737,11 @@ UE.plugins['autofloat'] = function() {
         LteIE6 = browser.ie && browser.version <= 6,
         quirks = browser.quirks;
 
+    function getScrollContainer() {
+        return me.scrollContainer || document.body || document.documentElement
+    }
+
+
     function checkHasUI(){
         if(!UE.ui){
             alert(lang.autofloatMsg);
@@ -17765,11 +17770,11 @@ UE.plugins['autofloat'] = function() {
             if(toolbarBox.style.position != 'absolute'){
                 toolbarBox.style.position = 'absolute';
             }
-            toolbarBox.style.top = (document.body.scrollTop||document.documentElement.scrollTop) - orgTop + topOffset  + 'px';
+            toolbarBox.style.top = (getScrollContainer().scrollTop) - orgTop + topOffset + 'px';
         } else {
             if (browser.ie7Compat && flag) {
                 flag = false;
-                toolbarBox.style.left =  domUtils.getXY(toolbarBox).x - document.documentElement.getBoundingClientRect().left+2  + 'px';
+                toolbarBox.style.left = domUtils.getXY(toolbarBox).x - getScrollContainer().getBoundingClientRect().left + 2 + 'px';
             }
             if(toolbarBox.style.position != 'fixed'){
                 toolbarBox.style.position = 'fixed';
@@ -17801,7 +17806,8 @@ UE.plugins['autofloat'] = function() {
     },browser.ie ? 200 : 100,true);
 
     me.addListener('destroy',function(){
-        domUtils.un(window, ['scroll','resize'], updateFloating);
+        domUtils.un(window, ['resize'], updateFloating);
+        domUtils.un(getScrollContainer(), ['scroll'], updateFloating);
         me.removeListener('keydown', defer_updateFloating);
     });
 
@@ -17819,7 +17825,8 @@ UE.plugins['autofloat'] = function() {
             if(LteIE6){
                 fixIE6FixedPos();
             }
-            domUtils.on(window, ['scroll','resize'], updateFloating);
+            domUtils.on(window, ['resize'], updateFloating);
+            domUtils.on(getScrollContainer(), ['scroll'], updateFloating);
             me.addListener('keydown', defer_updateFloating);
 
             me.addListener('beforefullscreenchange', function (t, enabled){
