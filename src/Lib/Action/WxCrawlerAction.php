@@ -16,7 +16,7 @@ class WxCrawlerAction extends AAction
             CURLOPT_USERAGENT => "Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/39.0.2171.71 Safari/537.36",
         );
 
-        $opts[CURLOPT_URL] = $url ;
+        $opts[CURLOPT_URL] = env('UEDITOR_WX_CRAWLER_PREFIX', '') . $url;
 
         /* 初始化并执行curl请求 */
         $ch = curl_init();

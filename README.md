@@ -86,4 +86,10 @@ composer require quansitech/qscmf-formitem-ueditor
   ```blade
   在app/Common/Conf 下新增ueditor_config.json或者ueditor_config.php(返回数组)，该文件将会替换掉默认的config.json。如有客制化config.json的需求，定制该文件即可。
   ```
-  
+
++ 自定义微信文章获取前缀设置
+
+  ```dotenv
+  # 在项目.env文件中添加如下配置
+  UEDITOR_WX_CRAWLER_PREFIX=https://【域名】/?url=
+  ```
