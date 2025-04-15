@@ -65,7 +65,7 @@ export default class Ueditor extends Component<ColumnProps & {
 
         const extraPromise = () => {
             // 加加额外脚本
-            const promises = this.props.fieldProps.extraScripts?.map(s => {
+            const promises = this.props.fieldProps.extraScripts?.map((s: string) => {
                 if (document.querySelector(`script[src="${s}"]`)) {
                     return () => Promise.resolve()
                 }
@@ -131,13 +131,13 @@ export default class Ueditor extends Component<ColumnProps & {
                             //     $('.submit').trigger('startHandlePostData', '正在抓取图片');
                             that.setState({loading: true})
                             that.props.fieldProps.onChange('[抓取图片中]' + that.editor?.getContent().replace(/^\[抓取图片中]/, ''))
-                            that.props.dataIndex && that.props.form?.validateFields([that.props.dataIndex])
+                            that.props.fieldProps['data-field'] && that.props.form?.validateFields([that.props.fieldProps['data-field']])
                         }
                     });
 
                     this.addListener("catchremotesuccess", function () {
                         that.props.fieldProps.onChange(that.editor?.getContent().replace(/^\[抓取图片中]/, ''))
-                        that.props.dataIndex && that.props.form?.validateFields([that.props.dataIndex])
+                        that.props.dataIndex && that.props.form?.validateFields([that.props.fieldProps['data-field']])
                         that.setState({loading: false})
                         //     $('.submit').trigger('endHandlePostData');
                     });
@@ -280,7 +280,7 @@ export default class Ueditor extends Component<ColumnProps & {
 
                             that.setState({loading: true})
                             that.props.fieldProps.onChange('[抓取图片中]' + that.editor?.getContent().replace(/^\[抓取图片中]/, ''))
-                            that.props.dataIndex && that.props.form?.validateFields([that.props.dataIndex])
+                            that.props.fieldProps['data-field'] && that.props.form?.validateFields([that.props.fieldProps['data-field']])
                         },
                     },
                     commands: {}
@@ -299,7 +299,7 @@ export default class Ueditor extends Component<ColumnProps & {
 
             this.editor = window.UE.getEditor(this.state.containerId, config)
             if (this.modalContext?.inModal) {
-                this.editor.scrollContainer = findParentElement(this.containerRef, '.ant-modal-wrap')
+                this.editor.scrollContainer = findParentElement(this.containerRef as HTMLElement, '.ant-modal-wrap')
             }
 
             this.editor?.ready(() => {
@@ -325,7 +325,7 @@ export default class Ueditor extends Component<ColumnProps & {
     render() {
         return <ModalContext.Consumer>
             {
-                modalContext => {
+                (modalContext: ModalContext) => {
                     this.modalContext = modalContext
                     return <div ref={el => this.containerRef = el}>
                         <Spin spinning={this.state.loading}>

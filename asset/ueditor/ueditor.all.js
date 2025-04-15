@@ -25419,7 +25419,6 @@ UE.plugin.register('insertfile', function (){
 
         var config = UEDITOR_CONFIG;
         var whitList = config.whitList;
-        console.log(whitList)
 
         function filter(node) {
 
