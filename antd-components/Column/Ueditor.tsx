@@ -137,7 +137,7 @@ export default class Ueditor extends Component<ColumnProps & {
 
                     this.addListener("catchremotesuccess", function () {
                         that.props.fieldProps.onChange(that.editor?.getContent().replace(/^\[抓取图片中]/, ''))
-                        that.props.dataIndex && that.props.form?.validateFields([that.props.fieldProps['data-field']])
+                        that.props.fieldProps['data-field'] && that.props.form?.validateFields([that.props.fieldProps['data-field']])
                         that.setState({loading: false})
                         //     $('.submit').trigger('endHandlePostData');
                     });
