@@ -17738,7 +17738,14 @@ UE.plugins['autofloat'] = function() {
         quirks = browser.quirks;
 
     function getScrollContainer() {
-        return me.scrollContainer || document.body || document.documentElement
+        return me.scrollContainer || document.body || document.documentElement;
+    }
+
+    function getScrollListenerContainer() {
+        if (me.scrollContainer) {
+            return me.scrollContainer;
+        }
+        return document;
     }
 
 
@@ -17807,7 +17814,7 @@ UE.plugins['autofloat'] = function() {
 
     me.addListener('destroy',function(){
         domUtils.un(window, ['resize'], updateFloating);
-        domUtils.un(getScrollContainer(), ['scroll'], updateFloating);
+        domUtils.un(getScrollListenerContainer(), ['scroll'], updateFloating);
         me.removeListener('keydown', defer_updateFloating);
     });
 
@@ -17826,7 +17833,7 @@ UE.plugins['autofloat'] = function() {
                 fixIE6FixedPos();
             }
             domUtils.on(window, ['resize'], updateFloating);
-            domUtils.on(getScrollContainer(), ['scroll'], updateFloating);
+            domUtils.on(getScrollListenerContainer(), ['scroll'], updateFloating);
             me.addListener('keydown', defer_updateFloating);
 
             me.addListener('beforefullscreenchange', function (t, enabled){
@@ -23539,6 +23546,9 @@ UE.plugins['catchremoteimage'] = function () {
 
 
             function canCatchRemote(src){
+                if (!src){
+                    return false;
+                }
                 var CATCH_SUCCESS = src.indexOf('img_catch_success') > -1;
                 if(CATCH_SUCCESS){
                     return false;
