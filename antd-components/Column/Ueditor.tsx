@@ -46,6 +46,7 @@ export default class Ueditor extends Component<ColumnProps & {
         containerId: uniqueId('ueditor_'),
         width: '',
     }
+    err: string = ''
 
     componentDidMount() {
         this.setState({
@@ -62,6 +63,13 @@ export default class Ueditor extends Component<ColumnProps & {
                         return createScript(this.props.fieldProps.ueditorPath + '/lang/zh-cn/zh-cn.js')
                     })
         }
+
+        this.props.fieldProps.withValidator((v: any)=>{
+            if (this.err){
+                throw new Error(this.err)
+            }
+            return true
+        })
 
         const extraPromise = () => {
             // 加加额外脚本
@@ -125,19 +133,19 @@ export default class Ueditor extends Component<ColumnProps & {
                                     });
                                 }
                             }
-                        }
+                        }                        
 
                         if (catchGo) {
                             //     $('.submit').trigger('startHandlePostData', '正在抓取图片');
                             that.setState({loading: true})
-                            that.props.fieldProps.onChange('[抓取图片中]' + that.editor?.getContent().replace(/^\[抓取图片中]/, ''))
-                            that.props.fieldProps['data-field'] && that.props.form?.validateFields([that.props.fieldProps['data-field']])
+                            that.err = '抓取图片中';
+                            that.props.fieldProps.onChange(that.editor?.getContent().trim() + ' ')
                         }
                     });
 
                     this.addListener("catchremotesuccess", function () {
-                        that.props.fieldProps.onChange(that.editor?.getContent().replace(/^\[抓取图片中]/, ''))
-                        that.props.fieldProps['data-field'] && that.props.form?.validateFields([that.props.fieldProps['data-field']])
+                        that.err = '';
+                        that.props.fieldProps.onChange(that.editor?.getContent().trim())
                         that.setState({loading: false})
                         //     $('.submit').trigger('endHandlePostData');
                     });
@@ -276,11 +284,10 @@ export default class Ueditor extends Component<ColumnProps & {
                             filter.call(me, html);
                             me.document.body.innerHTML = `<section>${html}</section>`;
 
-                            me.fireEvent('catchremoteimage');
-
                             that.setState({loading: true})
-                            that.props.fieldProps.onChange('[抓取图片中]' + that.editor?.getContent().replace(/^\[抓取图片中]/, ''))
-                            that.props.fieldProps['data-field'] && that.props.form?.validateFields([that.props.fieldProps['data-field']])
+                            that.err = '抓取图片中'
+                            that.props.fieldProps.onChange(that.editor?.getContent().trim() + ' ')
+                            me.fireEvent('catchremoteimage');
                         },
                     },
                     commands: {}
@@ -310,7 +317,7 @@ export default class Ueditor extends Component<ColumnProps & {
                 }
 
                 this.editor?.addListener('contentChange', () => {
-                    this.props.fieldProps.onChange(this.editor?.getContent())
+                    this.props.fieldProps.onChange(this.editor?.getContent().trim())
                 })
                 this.setState({loading: false})
             })
