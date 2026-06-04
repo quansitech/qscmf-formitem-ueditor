@@ -2,6 +2,7 @@
 namespace FormItem\Ueditor\FormType\Ueditor;
 
 use AntdAdmin\Component\ColumnType\BaseColumn;
+use FormItem\Ueditor\Column\Ueditor as UeditorColumn;
 use Illuminate\Support\Str;
 use Qscmf\Builder\FormType\FormType;
 use Quansitech\BuilderAdapterForAntdAdmin\BuilderAdapter\FormAdapter\IAntdFormColumn;
@@ -23,13 +24,13 @@ class Ueditor implements FormType, IAntdFormColumn
         }
         $view->assign('server_url', __ROOT__ . '/extends/ueditor/index');
         $content = $view->fetch(__DIR__ . '/ueditor.html');
-        
+
         return $content;
     }
 
     public function formColumnAntdRender($options): BaseColumn
     {
-        $column = new \AntdAdmin\Component\Form\ColumnType\Ueditor($options['name'], $options['title']);
+        $column = new UeditorColumn($options['name'], $options['title']);
 
         return $column;
     }
