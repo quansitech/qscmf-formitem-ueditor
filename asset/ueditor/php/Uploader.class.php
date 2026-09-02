@@ -20,10 +20,23 @@ class Uploader
     private $fileSize; //文件大小
     private $fileType; //文件类型
     private $stateInfo; //上传状态信息,
+
+
+    private $extDisallow = [
+        'php',
+        'jsp',
+        'asp',
+        'aspx',
+        'py',
+        'sh',
+
+        ];
+
     // 需要清空referer的域名
     private $remote_save_no_referer_hosts = [
         'mmecoa.qpic.cn',
     ];
+
     private $stateMap = array( //上传状态映射表，国际化用户需考虑此处数据的国际化
         "SUCCESS", //上传成功标记，在UEditor中内不可改变，否则flash判断会出错
         "文件大小超出 upload_max_filesize 限制",
@@ -239,6 +252,12 @@ class Uploader
             return;
         }
 
+        //检查是否不允许的文件格式
+        if (!$this->checkDisallowType()) {
+            $this->stateInfo = $this->getStateInfo("ERROR_TYPE_NOT_ALLOWED");
+            return;
+        }
+
         //创建目录失败
         if (!file_exists($dirname) && !mkdir($dirname, 0777, true)) {
             $this->stateInfo = $this->getStateInfo("ERROR_CREATE_DIR");
@@ -357,6 +376,15 @@ class Uploader
     private function checkType()
     {
         return in_array($this->getFileExt(), $this->config["allowFiles"]);
+    }
+
+    /**
+     * 文件后缀限制检测
+     * @return bool
+     */
+    private function checkDisallowType(): bool
+    {
+        return !in_array(ltrim($this->getFileExt(), '.'), $this->extDisallow, true);
     }
 
     /**
