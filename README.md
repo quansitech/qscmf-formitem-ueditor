@@ -94,4 +94,20 @@ composer require quansitech/qscmf-formitem-ueditor
   UEDITOR_WX_CRAWLER_PREFIX=https://【域名】/?url=
   ```
 
-  
++ Ueditor 鉴权
+
+  后台管理员登录后默认可以使用 Ueditor。若前台需要使用 Ueditor，需要在前台用户完成自身登录鉴权后，为当前 session 开启授权：
+
+  ```php
+  use FormItem\Ueditor\Lib\UeditorAuth;
+
+  UeditorAuth::enable();
+  ```
+
+  退出前台登录时可关闭当前 session 的 Ueditor 授权：
+
+  ```php
+  UeditorAuth::disable();
+  ```
+
+  `enable()` 只对当前 session 生效，不能替代前台用户自身的登录鉴权。
