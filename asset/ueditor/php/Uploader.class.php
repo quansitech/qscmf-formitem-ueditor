@@ -22,16 +22,6 @@ class Uploader
     private $stateInfo; //上传状态信息,
 
 
-    private $extDisallow = [
-        'php',
-        'jsp',
-        'asp',
-        'aspx',
-        'py',
-        'sh',
-
-        ];
-
     // 需要清空referer的域名
     private $remote_save_no_referer_hosts = [
         'mmecoa.qpic.cn',
@@ -198,6 +188,22 @@ class Uploader
 
         //设置Referer破解防盗链
         $http_arr = parse_url($imgUrl);
+        if (empty($http_arr['scheme']) || empty($http_arr['host'])) {
+            $this->stateInfo = $this->getStateInfo("ERROR_HTTP_LINK");
+            return;
+        }
+
+        $urlExt = $this->getUrlFileExt(isset($http_arr['path']) ? $http_arr['path'] : '');
+        if ($urlExt === '') {
+            if (!$this->isAllowedRemoteDomain($http_arr['host'])) {
+                $this->stateInfo = $this->getStateInfo("ERROR_TYPE_NOT_ALLOWED");
+                return;
+            }
+        } elseif (!$this->isAllowedRemoteFileType($urlExt)) {
+            $this->stateInfo = $this->getStateInfo("ERROR_TYPE_NOT_ALLOWED");
+            return;
+        }
+
         $referer = $http_arr['scheme'] . '://' . $http_arr['host'];
 
         //部分图片源无法访问
@@ -252,8 +258,8 @@ class Uploader
             return;
         }
 
-        //检查是否不允许的文件格式
-        if (!$this->checkDisallowType()) {
+        //远程文件后缀必须命中 catcherAllowFiles 白名单
+        if (!$this->isAllowedRemoteFileType($this->getFileExt($headers['Content-Type'][0]))) {
             $this->stateInfo = $this->getStateInfo("ERROR_TYPE_NOT_ALLOWED");
             return;
         }
@@ -382,9 +388,47 @@ class Uploader
      * 文件后缀限制检测
      * @return bool
      */
-    private function checkDisallowType(): bool
+    /**
+     * 返回 URL 最后一个路径段的扩展名；查询字符串不参与判断。
+     */
+    private function getUrlFileExt($path)
     {
-        return !in_array(ltrim($this->getFileExt(), '.'), $this->extDisallow, true);
+        $filename = basename($path);
+        if ($filename === '' || strpos($filename, '.') === false) {
+            return '';
+        }
+
+        return '.' . strtolower(pathinfo($filename, PATHINFO_EXTENSION));
+    }
+
+    /**
+     * 远程抓图仅允许 catcherAllowFiles 配置中的扩展名。
+     */
+    private function isAllowedRemoteFileType($ext)
+    {
+        return in_array(strtolower($ext), array_map('strtolower', (array)$this->config['allowFiles']), true);
+    }
+
+    /**
+     * 无文件后缀的 URL 仅允许来自 catcherAllowedDomains 配置的域名。
+     */
+    private function isAllowedRemoteDomain($host)
+    {
+        $host = strtolower(rtrim($host, '.'));
+        foreach ((array)(isset($this->config['allowedDomains']) ? $this->config['allowedDomains'] : array()) as $allowedDomain) {
+            $allowedDomain = strtolower(rtrim($allowedDomain, '.'));
+            if ($allowedDomain === $host) {
+                return true;
+            }
+
+            if (strpos($allowedDomain, '*.') === 0
+                && substr($host, -strlen(substr($allowedDomain, 1))) === substr($allowedDomain, 1)
+                && $host !== substr($allowedDomain, 2)) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     /**
