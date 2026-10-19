@@ -23291,6 +23291,9 @@ UE.plugins['catchremoteimage'] = function () {
 
 
             function canCatchRemote(src){
+                if (!src){
+                    return false;
+                }
                 var CATCH_SUCCESS = src.indexOf('img_catch_success') > -1;
                 if(CATCH_SUCCESS){
                     return false;
@@ -23346,21 +23349,36 @@ UE.plugins['catchremoteimage'] = function () {
             }
             setLoadingImg();
 
-            function fetchBackgroundUrls(){
-                var re = /background-image:\s+?url\([&quot;|\'](.+?)[&quot;|\']\)/g;
+            function decodeHtmlEntities(str) {
+                var txt = document.createElement("textarea");
+                txt.innerHTML = str;
+                return txt.value;
+            }
 
-                var xArray;
+            function fetchBackgroundUrls() {
+                var elements = me.document.querySelectorAll('*');
                 var results = [];
-                while(xArray = re.exec(me.document.body.innerHTML)){
-                    if(canCatchRemote(xArray[1])){
-                        results.push({
-                            origin: xArray[0],
-                            oldSrc: xArray[1]
-                        });
+
+                elements.forEach(function (el) {
+                    var computedStyle = window.getComputedStyle(el);
+                    var backgroundImage = computedStyle.backgroundImage;
+
+                    if (backgroundImage && backgroundImage !== 'none') {
+                        var match = backgroundImage.match(/url\(["']?(.*?)["']?\)/i);
+                        if (match) {
+                            var url = decodeHtmlEntities(match[1]);
+                            if (canCatchRemote(url)) {
+                                results.push({
+                                    origin: el,
+                                    oldSrc: url
+                                });
+                            }
+                        }
                     }
-                }
+                });
+
                 return results;
-            };
+            }
 
 
             function catchBackgroundImagesPromiseify(backgroundRemoteImages){
@@ -23377,19 +23395,27 @@ UE.plugins['catchremoteimage'] = function () {
                             var ci, cj, list = info.list;
 
 
+                            var listMap = {};
+                            list.forEach(function (item) {
+                                listMap[item.source] = item;
+                            });
+
                             for (i = 0; ci = backgrounds[i++];) {
-                                for (j = 0; cj = list[j++];) {
-                                    if (ci.oldSrc == cj.source && cj.state == "SUCCESS") {  //抓取失败时不做替换处理
-                                        newSrc = catcherUrlPrefix + cj.url;
-                                        newSrc = utils.addParamToUrl(newSrc, {
-                                            'catch-result': 'img_catch_success'
-                                        });
-                                        var DOM = me.document.querySelector('[data-background="' + ci.oldSrc + '"]');
-                                        var ORIGIN_BG_SIZE = DOM.getAttribute('data-background-size');
-                                        DOM.style['background-image'] = 'url(' + newSrc + ')';
-                                        DOM.style['background-size'] = ORIGIN_BG_SIZE;
-                                        break;
-                                    }
+                                var cj = listMap[ci.oldSrc];
+                                if (cj && cj.state === "SUCCESS") {
+                                    var newSrc = catcherUrlPrefix + cj.url;
+                                    newSrc = utils.addParamToUrl(newSrc, {
+                                        'catch-result': 'img_catch_success'
+                                    });
+
+                                    var elements = me.document.querySelectorAll('[data-background="' + ci.oldSrc + '"]');
+                                    elements.forEach(function (el) {
+                                        var ORIGIN_BG_SIZE = el.getAttribute('data-background-size') || 'cover';
+                                        el.style['background-image'] = 'url(' + newSrc + ')';
+                                        el.style['background-size'] = ORIGIN_BG_SIZE;
+                                    });
+                                } else {
+                                    console.warn('未找到匹配的资源:', ci.oldSrc);
                                 }
                             }
 
@@ -25124,6 +25150,87 @@ UE.plugin.register('insertfile', function (){
 });
 
 
+// plugins/xssFilter.js
+    /**
+     * @file xssFilter.js
+     * @desc xss过滤器
+     * @author robbenmu
+     */
+
+    UE.plugins.xssFilter = function () {
+
+        var config = UEDITOR_CONFIG;
+        var whitList = config.whitList;
+        console.log(whitList)
+
+        function filter(node) {
+
+            var tagName = node.tagName;
+            var attrs = node.attrs;
+
+            if (!whitList.hasOwnProperty(tagName)) {
+                node.parentNode.removeChild(node);
+                return false;
+            }
+
+            UE.utils.each(attrs, function (val, key) {
+
+                if (whitList[tagName].indexOf(key) === -1) {
+                    node.setAttr(key);
+                }
+            });
+        }
+
+        // 添加inserthtml\paste等操作用的过滤规则
+        if (whitList && config.xssFilterRules) {
+            this.options.filterRules = function () {
+
+                var result = {};
+
+                UE.utils.each(whitList, function (val, key) {
+                    result[key] = function (node) {
+                        return filter(node);
+                    };
+                });
+
+                return result;
+            }();
+        }
+
+        var tagList = [];
+
+        UE.utils.each(whitList, function (val, key) {
+            tagList.push(key);
+        });
+
+        // 添加input过滤规则
+        //
+        if (whitList && config.inputXssFilter) {
+            this.addInputRule(function (root) {
+
+                root.traversal(function (node) {
+                    if (node.type !== 'element') {
+                        return false;
+                    }
+                    filter(node);
+                });
+            });
+        }
+        // 添加output过滤规则
+        //
+        if (whitList && config.outputXssFilter) {
+            this.addOutputRule(function (root) {
+
+                root.traversal(function (node) {
+                    if (node.type !== 'element') {
+                        return false;
+                    }
+                    filter(node);
+                });
+            });
+        }
+
+    };
 
 
 // ui/ui.js

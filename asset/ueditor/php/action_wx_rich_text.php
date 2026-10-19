@@ -19,7 +19,7 @@ function fetchWxContent($url): bool|string
 
     $opts[CURLOPT_PROTOCOLS] = CURLPROTO_HTTP | CURLPROTO_HTTPS;
     $opts[CURLOPT_REDIR_PROTOCOLS] = CURLPROTO_HTTP | CURLPROTO_HTTPS;
-    $opts[CURLOPT_URL] = $url ;
+    $opts[CURLOPT_URL] = env('UEDITOR_WX_CRAWLER_PREFIX', '') . $url;
 
     /* 初始化并执行curl请求 */
     $ch = curl_init();
@@ -73,6 +73,7 @@ $text .= <<<EOF
                             filter: 'unset',
                             backgound: 'auto',
                             display: 'unset',
+                            'padding-bottom': 'unset',
                        })
                        .removeClass('img_loading');
                 });
