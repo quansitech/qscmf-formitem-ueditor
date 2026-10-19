@@ -16,6 +16,8 @@ class WxCrawlerAction extends AAction
             CURLOPT_USERAGENT => "Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/39.0.2171.71 Safari/537.36",
         );
 
+        $opts[CURLOPT_PROTOCOLS] = CURLPROTO_HTTP | CURLPROTO_HTTPS;
+        $opts[CURLOPT_REDIR_PROTOCOLS] = CURLPROTO_HTTP | CURLPROTO_HTTPS;
         $opts[CURLOPT_URL] = env('UEDITOR_WX_CRAWLER_PREFIX', '') . $url;
 
         /* 初始化并执行curl请求 */
@@ -32,9 +34,16 @@ class WxCrawlerAction extends AAction
 
     public function run():string
     {
-        $js_url = asset('ueditor/third-party/jquery-1.10.2.min.js');
         $url = $this->get_data['url'];
         $url = urldecode($url);
+        $scheme = strtolower(parse_url($url, PHP_URL_SCHEME) ?: '');
+
+        if (!in_array($scheme, ['http', 'https'], true)) {
+            http_response_code(400);
+            exit('invalid url');
+        }
+
+        $js_url = asset('ueditor/third-party/jquery-1.10.2.min.js');
         $text = $this->fetchWxContent($url);
 
         $cssToInlineStyles = new \TijsVerkoyen\CssToInlineStyles\CssToInlineStyles();
