@@ -19,7 +19,7 @@
             </notempty>
 
             <script type="text/javascript" charSet="utf-8" src="{$configJs}?v=2.1.0"></script>
-            <script type="text/javascript" charSet="utf-8" src="__PUBLIC__/ueditor/ueditor.all.js?v=2.1.0"></script>
+            <script type="text/javascript" charSet="utf-8" src="__PUBLIC__/ueditor/ueditor.all.js?v=2.1.1"></script>
             <script type="text/javascript" charSet="utf-8" src="__PUBLIC__/ueditor/lang/zh-cn/zh-cn.js?v=2.0.2"></script>
             <script>
                 UE.plugins['forceCatchRemoteImg'] = function () {
@@ -253,10 +253,6 @@
 
             if (url) {
                 opt['serverUrl'] = url;
-            }
-
-            if ($('#{$gid}').parents('.modal-dialog .panel-body').length) {
-                opt['autoFloatEnabled'] = false;
             }
 
             if (forcecatchremote) {

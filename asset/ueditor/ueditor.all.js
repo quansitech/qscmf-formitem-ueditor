@@ -17154,24 +17154,9 @@ UE.plugins['fiximgclick'] = (function () {
                 resizer.style.cssText += ';display:none;border:1px solid #3b77ff;z-index:' + (me.editor.options.zIndex) + ';';
 
                 var container = me.editor.iframe.parentNode;
-                container.appendChild(cover);
-                container.appendChild(resizer);
-
                 me.editor.ui.getDom().style.overflow = 'hidden';
                 container.style.overflow = 'hidden';
                 container.style.position = 'relative';
-
-                var toolbar = document.getElementById(me.editor.ui.id + '_toolbarbox');
-                if (toolbar) {
-                    toolbar.style.zIndex = '10';
-                }
-
-                var bottombar = document.getElementById(me.editor.ui.id + '_bottombar');
-                if (bottombar) {
-                    bottombar.style.position = 'relative';
-                    bottombar.style.backgroundColor = '#fff';
-                    bottombar.style.zIndex = '10';
-                }
 
                 me.initStyle();
                 me.initEvents();
@@ -17332,6 +17317,7 @@ UE.plugins['fiximgclick'] = (function () {
 
                 var editorPos = domUtils.getXY(me.editor.ui.getDom());
                 var iframePos = domUtils.getXY(me.editor.iframe);
+                var imgPos = domUtils.getXY(target);
                 var iframeDoc = me.editor.iframe.contentDocument || me.editor.iframe.contentWindow.document;
                 var scrollLeft = iframeDoc.documentElement.scrollLeft || iframeDoc.body.scrollLeft;
                 var scrollTop = iframeDoc.documentElement.scrollTop || iframeDoc.body.scrollTop;
@@ -17339,8 +17325,8 @@ UE.plugins['fiximgclick'] = (function () {
                 domUtils.setStyles(resizer, {
                     'width': target.width + 'px',
                     'height': target.height + 'px',
-                    'left': (iframePos.x + target.offsetLeft - scrollLeft - editorPos.x) + 'px',
-                    'top': (iframePos.y + target.offsetTop - scrollTop - editorPos.y) + 'px'
+                    'left': (iframePos.x + imgPos.x - scrollLeft - editorPos.x) + 'px',
+                    'top': (iframePos.y + imgPos.y - scrollTop - editorPos.y) + 'px'
                 });
             }
         }
@@ -17368,6 +17354,7 @@ UE.plugins['fiximgclick'] = (function () {
                     if (!imageScale) {
                         imageScale = new Scale();
                         imageScale.init(me);
+                        me.ui.getDom().appendChild(imageScale.cover);
                         me.ui.getDom().appendChild(imageScale.resizer);
 
                         var _keyDownHandler = function (e) {
@@ -17378,6 +17365,8 @@ UE.plugins['fiximgclick'] = (function () {
                             if (ele && (ele.className===undefined || ele.className.indexOf('edui-editor-imagescale') == -1)) {
                                 _keyDownHandler(e);
                             }
+                        }, _scrollHandler = function () {
+                            imageScale.hide();
                         }, timer;
 
                         me.addListener('afterscaleshow', function (e) {
@@ -17385,6 +17374,8 @@ UE.plugins['fiximgclick'] = (function () {
                             me.addListener('beforemousedown', _mouseDownHandler);
                             domUtils.on(document, 'keydown', _keyDownHandler);
                             domUtils.on(document,'mousedown', _mouseDownHandler);
+                            domUtils.on(me.document, 'scroll', _scrollHandler);
+                            domUtils.on(me.window, 'scroll', _scrollHandler);
                             me.selection.getNative().removeAllRanges();
                         });
                         me.addListener('afterscalehide', function (e) {
@@ -17392,6 +17383,8 @@ UE.plugins['fiximgclick'] = (function () {
                             me.removeListener('beforemousedown', _mouseDownHandler);
                             domUtils.un(document, 'keydown', _keyDownHandler);
                             domUtils.un(document,'mousedown', _mouseDownHandler);
+                            domUtils.un(me.document, 'scroll', _scrollHandler);
+                            domUtils.un(me.window, 'scroll', _scrollHandler);
                             var target = imageScale.target;
                             if (target.parentNode) {
                                 me.selection.getRange().selectNode(target).select();
@@ -17782,10 +17775,12 @@ UE.plugins['autofloat'] = function() {
         docStyle.backgroundAttachment = 'fixed';
     }
     var	bakCssText,
+        bottomBakCssText,
         placeHolder = document.createElement('div'),
-        toolbarBox,orgTop,
+        toolbarBox, orgTop,
+        bottombar,
         getPosition,
-        flag =true;   //ie7模式下需要偏移
+        flag = true;   //ie7模式下需要偏移
     function setFloating(){
         var toobarBoxPos = domUtils.getXY(toolbarBox),
             origalFloat = domUtils.getComputedStyle(toolbarBox,'position'),
@@ -17817,7 +17812,13 @@ UE.plugins['autofloat'] = function() {
         }
 
         toolbarBox.style.cssText = bakCssText;
-        toolbarBox.style.zIndex = '10';
+        toolbarBox.style.zIndex = '2100';
+        if (bottombar) {
+            bottombar.style.cssText = bottomBakCssText;
+            bottombar.style.position = 'relative';
+            bottombar.style.backgroundColor = '#fff';
+            bottombar.style.zIndex = '2100';
+        }
     }
 
     function updateFloating(){
@@ -17849,7 +17850,19 @@ UE.plugins['autofloat'] = function() {
             toolbarBox = me.ui.getDom('toolbarbox');
             orgTop = getPosition(toolbarBox).top;
             bakCssText = toolbarBox.style.cssText;
+            if (bakCssText && !bakCssText.match(/z-index\s*:/i)) {
+                bakCssText += ';z-index:20';
+            }
+            toolbarBox.style.zIndex = '2100';
             placeHolder.style.height = toolbarBox.offsetHeight + 'px';
+
+            bottombar = me.ui.getDom('bottombar');
+            if (bottombar) {
+                bottomBakCssText = bottombar.style.cssText;
+                bottombar.style.position = 'relative';
+                bottombar.style.backgroundColor = '#fff';
+                bottombar.style.zIndex = '2100';
+            }
             if(LteIE6){
                 fixIE6FixedPos();
             }
