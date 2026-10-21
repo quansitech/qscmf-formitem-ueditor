@@ -64,9 +64,20 @@ class WxCrawlerAction extends AAction
                 return false;
             }
 
-            $ip = str_contains($target['ip'], ':') ? '[' . $target['ip'] . ']' : $target['ip'];
+            $ips = $target['ips'];
+            if (version_compare(curl_version()['version'], '7.59.0', '<')) {
+                $ipv4 = array_values(array_filter(
+                    $ips,
+                    static fn(string $ip): bool => filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_IPV4) !== false
+                ));
+                $ips = array_slice($ipv4 ?: $ips, 0, 1);
+            }
+            $addresses = array_map(
+                static fn(string $ip): string => str_contains($ip, ':') ? '[' . $ip . ']' : $ip,
+                $ips
+            );
             $opts[CURLOPT_RESOLVE] = array(
-                $target['host'] . ':' . $target['port'] . ':' . $ip,
+                $target['host'] . ':' . $target['port'] . ':' . implode(',', $addresses),
             );
         }
 
@@ -103,6 +114,11 @@ class WxCrawlerAction extends AAction
             if ($target === null) {
                 return $this->errorResponse(400, 'invalid url');
             }
+        }
+
+        $target['ips'] = $this->resolvePublicIps($target['host']);
+        if ($target['ips'] === []) {
+            return $this->errorResponse(400, 'invalid url');
         }
 
         $text = $this->fetchWxContent($target);
@@ -207,11 +223,6 @@ EOF;
             return null;
         }
 
-        $ips = $this->resolvePublicIps($host);
-        if ($ips === []) {
-            return null;
-        }
-
         $authority = str_contains($host, ':') ? '[' . $host . ']' : $host;
         if (isset($parts['port'])) {
             $authority .= ':' . $port;
@@ -225,7 +236,6 @@ EOF;
             'url' => $scheme . '://' . $authority . ($path === '' ? '/' : $path) . $query . $fragment,
             'host' => $host,
             'port' => $port,
-            'ip' => $ips[0],
             'is_ip' => filter_var($host, FILTER_VALIDATE_IP) !== false,
         );
     }
@@ -255,7 +265,7 @@ EOF;
             }
         }
 
-        $ips = array_slice(array_values(array_unique($ips)), 0, 8);
+        $ips = array_values(array_unique($ips));
         foreach ($ips as $ip) {
             if (!$this->isPublicIp($ip)) {
                 return array();
@@ -267,11 +277,17 @@ EOF;
 
     private function isPublicIp(string $ip): bool
     {
-        return filter_var(
+        if (filter_var(
             $ip,
             FILTER_VALIDATE_IP,
-            FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE
-        ) !== false;
+            FILTER_FLAG_GLOBAL_RANGE
+        ) === false) {
+            return false;
+        }
+
+        // PHP's global-range flag also accepts multicast addresses.
+        $binary = inet_pton($ip);
+        return strlen($binary) === 4 ? ord($binary[0]) < 224 : ord($binary[0]) !== 0xff;
     }
 
     private function errorResponse(int $status, string $message): string
