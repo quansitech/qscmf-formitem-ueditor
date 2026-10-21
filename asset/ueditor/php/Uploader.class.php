@@ -195,7 +195,7 @@ class Uploader
 
         $urlExt = $this->getUrlFileExt(isset($http_arr['path']) ? $http_arr['path'] : '');
         if ($urlExt === '') {
-            if (!$this->isAllowedRemoteDomain($http_arr['host'])) {
+            if (!self::isAllowedRemoteDomain($http_arr['host'], (array)($this->config['allowedDomains'] ?? array()))) {
                 $this->stateInfo = $this->getStateInfo("ERROR_TYPE_NOT_ALLOWED");
                 return;
             }
@@ -412,10 +412,14 @@ class Uploader
     /**
      * 无文件后缀的 URL 仅允许来自 catcherAllowedDomains 配置的域名。
      */
-    private function isAllowedRemoteDomain($host)
+    public static function isAllowedRemoteDomain($host, array $allowedDomains)
     {
-        $host = strtolower(rtrim($host, '.'));
-        foreach ((array)(isset($this->config['allowedDomains']) ? $this->config['allowedDomains'] : array()) as $allowedDomain) {
+        $host = strtolower(rtrim(trim($host), '.'));
+        if ($host === '') {
+            return false;
+        }
+
+        foreach ($allowedDomains as $allowedDomain) {
             $allowedDomain = strtolower(rtrim($allowedDomain, '.'));
             if ($allowedDomain === $host) {
                 return true;
