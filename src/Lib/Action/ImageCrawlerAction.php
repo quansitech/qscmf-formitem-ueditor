@@ -25,6 +25,7 @@ class ImageCrawlerAction extends AAction
             "pathFormat" => $this->config['catcherPathFormat'],
             "maxSize" => $this->config['catcherMaxSize'],
             "allowFiles" => $this->config['catcherAllowFiles'],
+            "allowedDomains" => isset($this->config['catcherAllowedDomains']) ? $this->config['catcherAllowedDomains'] : array(),
             "oriName" => "remote.png"
         );
         $fieldName = $this->config['catcherFieldName'];
@@ -63,7 +64,9 @@ class ImageCrawlerAction extends AAction
         foreach ($source as $imgUrl) {
             $item = new Uploader($imgUrl, $config, "remote");
             $info = $item->getFileInfo();
-            $info['url'] = Helper::parseUrl($info['url'], $this->get_data['urldomain'], $this->get_data['url_prefix'], $this->get_data['url_suffix']);
+            if ($info['state'] === 'SUCCESS' && is_string($info['url'])) {
+                $info['url'] = Helper::parseUrl($info['url'], $this->get_data['urldomain'], $this->get_data['url_prefix'], $this->get_data['url_suffix']);
+            }
 
             $catch_res = [];
             Helper::parseCatchRes($imgUrl, $info, $catch_res);

@@ -4,6 +4,7 @@ namespace FormItem\Ueditor\Controller;
 
 
 use FormItem\Ueditor\Lib\Action\Context;
+use FormItem\Ueditor\Lib\UeditorAuth;
 
 class UeditorController extends \Think\Controller{
 
@@ -16,6 +17,13 @@ class UeditorController extends \Think\Controller{
     }
 
     public function index():void{
+        // UEditor handles all of its operations through this endpoint, so require
+        // the same administrator session used by the rest of the admin area.
+        if (!UeditorAuth::canUse()) {
+            $this->handleUnauthorized();
+            return;
+        }
+
         $get_data = I("get.");
         $action_type = $get_data["action"];
 
@@ -26,6 +34,14 @@ class UeditorController extends \Think\Controller{
         }
 
         echo $result;
+    }
+
+    protected function handleUnauthorized(): void
+    {
+        header('Content-Type: application/json; charset=utf-8');
+        echo json_encode(array(
+            'state' => '未登录或登录已过期'
+        ), JSON_UNESCAPED_UNICODE);
     }
 
     protected function handleCallback($result, array $get_data): void
