@@ -90,5 +90,9 @@ composer require quansitech/qscmf-formitem-ueditor
   ```dotenv
   # 在项目.env文件中添加如下配置
   UEDITOR_WX_CRAWLER_PREFIX=https://【域名】/?url=
+  # 未配置时默认 mp.weixin.qq.com,weixin.qq.com；配置后以配置值为准
+  # 原始微信域名和最终请求域名都必须命中白名单；支持逗号分隔和 *.example.com
+  UEDITOR_WX_CRAWLER_ALLOWED_HOSTS=mp.weixin.qq.com,weixin.qq.com,【代理域名】
+  UEDITOR_WX_CRAWLER_VERIFY_TLS=true
   ```
-  
+  仅允许 HTTP(S) 和公网 IP，内网、回环、链路本地及保留地址会被拒绝。
